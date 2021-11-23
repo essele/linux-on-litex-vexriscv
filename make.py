@@ -352,6 +352,22 @@ class ULX3S(Board):
             "framebuffer",
         }, bitstream_ext=".svf")
 
+# iCESugar-Pro support -----------------------------------------------------------------------------
+
+class iCESugar_Pro(Board):
+    spiflash = W25Q256(Codes.READ_1_1_1)
+    soc_kwargs = {"l2_size" : 2048} # Use Wishbone and L2 for memory accesses.
+    def __init__(self):
+        from litex_boards.targets import icesugar_pro
+        Board.__init__(self, icesugar_pro.BaseSoC, soc_capabilities={
+            # Communication
+            "serial",
+            # Storage
+            "spiflash",
+        #    "sdcard",
+         "spisdcard",
+        }, bitstream_ext=".svf")
+
 # HADBadge support ---------------------------------------------------------------------------------
 
 class HADBadge(Board):
@@ -560,6 +576,7 @@ supported_boards = {
     # Lattice
     "versa_ecp5":      VersaECP5,
     "ulx3s":           ULX3S,
+    "icesugar_pro":    iCESugar_Pro,
     "hadbadge":        HADBadge,
     "orangecrab":      OrangeCrab,
     "butterstick":     ButterStick,
