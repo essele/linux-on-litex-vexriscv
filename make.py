@@ -18,6 +18,8 @@ from litespi.opcodes import SpiNorFlashOpCodes as Codes
 
 from soc_linux import SoCLinux
 
+from lee.test import LeeTest
+
 kB = 1024
 
 # Board definition----------------------------------------------------------------------------------
@@ -340,38 +342,40 @@ class VersaECP5(Board):
 # ULX3S support ------------------------------------------------------------------------------------
 
 class ULX3S(Board):
-    soc_kwargs = {"l2_size" : 2048} # Use Wishbone and L2 for memory accesses.
+#    soc_kwargs = {"l2_size" : 2048} # Use Wishbone and L2 for memory accesses.
+    soc_kwargs = {"l2_size" : 0} # Use Wishbone and L2 for memory accesses.
     def __init__(self):
         from litex_boards.targets import ulx3s
         Board.__init__(self, ulx3s.BaseSoC, soc_capabilities={
             # Communication
             "serial",
             # Storage
-            "sdcard",
+            "spisdcard",
             # Video,
-            "framebuffer",
+#            "framebuffer",
         }, bitstream_ext=".svf")
 
 # iCESugar-Pro support -----------------------------------------------------------------------------
 
 class iCESugar_Pro(Board):
-    spiflash = W25Q256(Codes.READ_1_1_1)
-    soc_kwargs = {"l2_size" : 2048} # Use Wishbone and L2 for memory accesses.
+    spiflash = W25Q256(Codes.READ_1_1_4)
+    soc_kwargs = {"l2_size" : 0} # Use Wishbone and L2 for memory accesses.
+#    soc_kwargs = {"l2_size" : 2048} # Use Wishbone and L2 for memory accesses.
     def __init__(self):
         from litex_boards.targets import icesugar_pro
         Board.__init__(self, icesugar_pro.BaseSoC, soc_capabilities={
             # Communication
             "serial",
             # Storage
-            "spiflash",
-        #    "sdcard",
+            "spiflash4x",
+#            "sdcard",
          "spisdcard",
         }, bitstream_ext=".svf")
 
 # HADBadge support ---------------------------------------------------------------------------------
 
 class HADBadge(Board):
-    spiflash = W25Q128JV(Codes.READ_1_1_1)
+    spiflash = W25Q128JV(Codes.READ_1_1_4)
     soc_kwargs = {"l2_size" : 2048} # Use Wishbone and L2 for memory accesses.
     def __init__(self):
         from litex_boards.targets import hadbadge
@@ -391,6 +395,7 @@ class OrangeCrab(Board):
     soc_kwargs = {
         "sys_clk_freq" : int(64e6), # Increase sys_clk_freq to 64MHz (48MHz default).
         "l2_size"      : 2048,      # Use Wishbone and L2 for memory accesses.
+#        "l2_size"      : 0,      # Use Wishbone and L2 for memory accesses.
     }
     def __init__(self):
         from litex_boards.targets import orangecrab
@@ -403,6 +408,7 @@ class OrangeCrab(Board):
             "i2c",
             # Storage
             "spisdcard",
+            # "sdcard",
         }, bitstream_ext=".bit")
 
 # Butterstick support ------------------------------------------------------------------------------
@@ -447,7 +453,7 @@ class TrellisBoard(Board):
 # ECPIX5 support -----------------------------------------------------------------------------------
 
 class ECPIX5(Board):
-    spiflash = IS25LP256D(Codes.READ_1_1_1)
+    #spiflash = IS25LP256D(Codes.READ_1_1_1)
     soc_kwargs = {
         "sys_clk_freq" : int(50e6),
         "l2_size"      : 2048, # Use Wishbone and L2 for memory accesses.
@@ -678,10 +684,13 @@ def main():
             soc.add_mmcm(2)
         if "spiflash" in board.soc_capabilities:
             soc.add_spi_flash(mode="1x", module=board.spiflash, with_master=False)
+        if "spiflash4x" in board.soc_capabilities:
+            soc.add_spi_flash(mode="4x", module=board.spiflash, with_master=False)
         if "spisdcard" in board.soc_capabilities:
             soc.add_spi_sdcard()
         if "sdcard" in board.soc_capabilities:
-            soc.add_sdcard()
+      #      soc.add_sdcard()
+            soc.add_sdcard(software_debug=True)
         if "ethernet" in board.soc_capabilities:
             soc.configure_ethernet(local_ip=args.local_ip, remote_ip=args.remote_ip)
         #if "leds" in board.soc_capabilities:
@@ -698,7 +707,15 @@ def main():
             soc.add_xadc()
         if "icap_bitstream" in board.soc_capabilities:
             soc.add_icap_bitstream()
-        soc.configure_boot()
+        soc.configure_boot() 
+
+
+        # Lee's bits -----------
+#        ledn = soc.platform.request_all("user_led_n")
+#        soc.submodules.leetest = LeeTest(pads=ledn, sys_clk_freq=60e6)
+
+
+
 
         # Build ------------------------------------------------------------------------------------
         build_dir = os.path.join("build", board_name)
